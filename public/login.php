@@ -16,7 +16,7 @@ unset($_SESSION['success']);
 
     <title>Login | Help Desk</title>
 
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="/helpdesk-system/public/assets/css/style.css?v=2">
 </head>
 <body>
 
