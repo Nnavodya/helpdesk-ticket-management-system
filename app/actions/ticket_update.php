@@ -3,6 +3,7 @@
 
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 requireLogin();
 
@@ -12,14 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Verify CSRF token.
-$sessionToken = $_SESSION['csrf_token'] ?? '';
 $postedToken = $_POST['csrf_token'] ?? '';
-
-if (
-    !is_string($postedToken) ||
-    $sessionToken === '' ||
-    !hash_equals($sessionToken, $postedToken)
-) {
+if (!verifyCsrfToken($postedToken)) {
     http_response_code(403);
     exit('Invalid security token. Please go back and try again.');
 }
@@ -40,7 +35,7 @@ if (!$ticketId || $ticketId < 1) {
 }
 
 if (!is_string($newStatus) || !in_array($newStatus, $allowedStatuses, true)) {
-    $_SESSION['ticket_error'] = 'Please select a valid ticket status.';
+    setFlash('error', 'Please select a valid ticket status.');
     header('Location: ../../public/tickets/show.php?id=' . $ticketId);
     exit;
 }
@@ -59,7 +54,7 @@ try {
 
     // Lock the ticket while updating it.
     $sql = "
-        SELECT id, status
+        SELECT id, ticket_number, subject, created_by, assigned_to, status
         FROM tickets
         WHERE id = :ticket_id
     ";
@@ -85,7 +80,7 @@ try {
 
     if ($oldStatus === $newStatus) {
         $pdo->commit();
-        $_SESSION['ticket_success'] = 'The ticket already has this status.';
+        setFlash('info', 'The ticket already has this status.');
         header('Location: ../../public/tickets/show.php?id=' . $ticketId);
         exit;
     }
@@ -128,7 +123,31 @@ try {
 
     $pdo->commit();
 
-    $_SESSION['ticket_success'] = 'Ticket status updated successfully.';
+    // In-app notification to ticket creator (if updated by someone else)
+    if (!empty($ticket['created_by']) && (int) $ticket['created_by'] !== $userId) {
+        createNotification(
+            $pdo,
+            (int) $ticket['created_by'],
+            $ticketId,
+            'Status Changed: ' . $ticket['ticket_number'],
+            'Your ticket status was updated to "' . ucwords(str_replace('_', ' ', $newStatus)) . '" by ' . ($_SESSION['user_name'] ?? 'Staff'),
+            '/helpdesk-system/public/tickets/show.php?id=' . $ticketId
+        );
+    }
+
+    // In-app notification to assigned agent (if updated by someone else, e.g. Admin)
+    if (!empty($ticket['assigned_to']) && (int) $ticket['assigned_to'] !== $userId) {
+        createNotification(
+            $pdo,
+            (int) $ticket['assigned_to'],
+            $ticketId,
+            'Ticket Update: ' . $ticket['ticket_number'],
+            'Assigned ticket status was updated to "' . ucwords(str_replace('_', ' ', $newStatus)) . '" by ' . ($_SESSION['user_name'] ?? 'Admin'),
+            '/helpdesk-system/public/tickets/show.php?id=' . $ticketId
+        );
+    }
+
+    setFlash('success', 'Ticket status updated to ' . ucwords(str_replace('_', ' ', $newStatus)) . ' successfully.');
 
     header('Location: ../../public/tickets/show.php?id=' . $ticketId);
     exit;
@@ -140,7 +159,7 @@ try {
 
     error_log('Ticket status update failed: ' . $e->getMessage());
 
-    $_SESSION['ticket_error'] = 'Could not update the ticket status. Please try again.';
+    setFlash('error', 'Could not update the ticket status. Please try again.');
     header('Location: ../../public/tickets/show.php?id=' . $ticketId);
     exit;
 }
