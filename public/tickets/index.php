@@ -1,31 +1,42 @@
-
 <?php
+/**
+ * Ticket Listing & Search
+ * Help Desk & Ticket Management System
+ */
+
 require_once __DIR__ . '/../../app/includes/auth.php';
 require_once __DIR__ . '/../../app/config/database.php';
+require_once __DIR__ . '/../../app/includes/functions.php';
 
 requireLogin();
 
 $userId = (int) $_SESSION['user_id'];
 $userRole = $_SESSION['user_role'] ?? 'employee';
 
-$success = $_SESSION['ticket_success'] ?? '';
-unset($_SESSION['ticket_success']);
-
-$error = $_SESSION['ticket_error'] ?? '';
-unset($_SESSION['ticket_error']);
+$pageTitle = $userRole === 'admin' ? 'All Tickets' : ($userRole === 'agent' ? 'Assigned Tickets' : 'My Support Tickets');
+$activeNav = 'tickets';
 
 $search = trim($_GET['search'] ?? '');
 $status = $_GET['status'] ?? '';
+$priority = $_GET['priority'] ?? '';
+$categoryId = filter_input(INPUT_GET, 'category_id', FILTER_VALIDATE_INT);
 
-$allowedStatuses = [
-    'open', 'in_progress', 'pending', 'resolved', 'closed'
-];
-
+$allowedStatuses = ['open', 'in_progress', 'pending', 'resolved', 'closed'];
 if (!in_array($status, $allowedStatuses, true)) {
     $status = '';
 }
 
+$allowedPriorities = ['critical', 'high', 'medium', 'low'];
+if (!in_array($priority, $allowedPriorities, true)) {
+    $priority = '';
+}
+
 try {
+    // Fetch categories for filter dropdown
+    $catStmt = $pdo->query('SELECT id, name FROM categories ORDER BY name ASC');
+    $categories = $catStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Build tickets query
     $sql = '
         SELECT
             t.id,
@@ -34,8 +45,10 @@ try {
             t.priority,
             t.status,
             t.created_at,
+            t.updated_at,
             c.name AS category_name,
             u.name AS creator_name,
+            u.email AS creator_email,
             a.name AS agent_name
         FROM tickets t
         INNER JOIN categories c ON c.id = t.category_id
@@ -46,7 +59,7 @@ try {
 
     $params = [];
 
-    // Apply role-based ticket visibility.
+    // Role-based visibility
     if ($userRole === 'employee') {
         $sql .= ' AND t.created_by = :user_id';
         $params['user_id'] = $userId;
@@ -55,20 +68,31 @@ try {
         $params['user_id'] = $userId;
     }
 
+    // Search query
     if ($search !== '') {
-        $sql .= ' AND (
-            t.ticket_number LIKE :search_number
-            OR t.subject LIKE :search_subject
-        )';
-
+        $sql .= ' AND (t.ticket_number LIKE :search_num OR t.subject LIKE :search_subj OR u.name LIKE :search_creator)';
         $searchTerm = '%' . $search . '%';
-        $params['search_number'] = $searchTerm;
-        $params['search_subject'] = $searchTerm;
+        $params['search_num'] = $searchTerm;
+        $params['search_subj'] = $searchTerm;
+        $params['search_creator'] = $searchTerm;
     }
 
+    // Filter by status
     if ($status !== '') {
         $sql .= ' AND t.status = :status';
         $params['status'] = $status;
+    }
+
+    // Filter by priority
+    if ($priority !== '') {
+        $sql .= ' AND t.priority = :priority';
+        $params['priority'] = $priority;
+    }
+
+    // Filter by category
+    if ($categoryId && $categoryId > 0) {
+        $sql .= ' AND t.category_id = :category_id';
+        $params['category_id'] = $categoryId;
     }
 
     $sql .= ' ORDER BY t.created_at DESC';
@@ -80,187 +104,192 @@ try {
 } catch (PDOException $e) {
     error_log($e->getMessage());
     $tickets = [];
-    $error = 'Unable to load tickets. Please check the database.';
+    $categories = [];
+    $errorMessage = 'Unable to load tickets. Please check the database.';
 }
 
-function ticketListEscape($value): string
-{
-    return htmlspecialchars(
-        (string) $value,
-        ENT_QUOTES,
-        'UTF-8'
-    );
-}
+require_once __DIR__ . '/../../app/includes/header.php';
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tickets | Help Desk</title>
-    <link rel="stylesheet" href="/helpdesk-system/public/assets/css/style.css?v=4">
-</head>
-<body>
-
-<nav class="navbar">
-    <h2>Help Desk</h2>
+<div class="page-header">
+    <div>
+        <h1 class="page-title"><?= e($pageTitle) ?></h1>
+        <p class="page-subtitle">
+            Showing <?= count($tickets) ?> <?= count($tickets) === 1 ? 'ticket' : 'tickets' ?> matching your criteria.
+        </p>
+    </div>
 
     <div>
-        <a href="../dashboard.php">Dashboard</a>
-        &nbsp; | &nbsp;
-        <a href="../logout.php">Logout</a>
-    </div>
-</nav>
-
-<main class="page-container">
-
-    <section class="card">
-        <h1>
-            <?php if ($userRole === 'admin'): ?>
-                All Tickets
-            <?php elseif ($userRole === 'agent'): ?>
-                Assigned Tickets
-            <?php else: ?>
-                My Tickets
-            <?php endif; ?>
-        </h1>
-
-        <p class="muted">
-            Search and review your support tickets.
-        </p>
-
-        <?php if ($success !== ''): ?>
-            <p class="success">
-                <?= ticketListEscape($success) ?>
-            </p>
-        <?php endif; ?>
-
-        <?php if ($error !== ''): ?>
-            <p class="error">
-                <?= ticketListEscape($error) ?>
-            </p>
-        <?php endif; ?>
-
-        <form method="GET" action="index.php" class="filter-form">
-            <label for="search">Search</label>
-
-            <input
-                type="search"
-                id="search"
-                name="search"
-                value="<?= ticketListEscape($search) ?>"
-                placeholder="Ticket number or subject"
-            >
-
-            <label for="status">Filter by Status</label>
-
-            <select id="status" name="status">
-                <option value="">All statuses</option>
-                <?php foreach ($allowedStatuses as $option): ?>
-                    <option
-                        value="<?= ticketListEscape($option) ?>"
-                        <?= $status === $option ? 'selected' : '' ?>
-                    >
-                        <?= ticketListEscape(
-                            ucwords(str_replace('_', ' ', $option))
-                        ) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-
-            <button type="submit">Search Tickets</button>
-            <a class="btn" href="index.php">Clear Filters</a>
-        </form>
-
         <?php if ($userRole === 'employee'): ?>
-            <p>
-                <a class="btn" href="create.php">+ Create New Ticket</a>
-            </p>
+            <a class="btn btn-primary btn-lg" href="create.php">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Create New Ticket
+            </a>
         <?php endif; ?>
+    </div>
+</div>
 
-        <div class="table-wrapper">
-            <table>
-                <thead>
+<?php if (!empty($errorMessage)): ?>
+    <div class="alert alert-error">
+        <div class="alert-content"><?= e($errorMessage) ?></div>
+    </div>
+<?php endif; ?>
+
+<!-- Filter & Search Toolbar -->
+<form method="GET" action="index.php" class="filter-bar">
+    <div class="form-group" style="margin-bottom: 0;">
+        <label for="search">Search Keywords</label>
+        <input
+            type="search"
+            id="search"
+            name="search"
+            value="<?= e($search) ?>"
+            placeholder="Search by ticket #, subject, or requester..."
+        >
+    </div>
+
+    <div class="form-group" style="margin-bottom: 0;">
+        <label for="status">Status</label>
+        <select id="status" name="status">
+            <option value="">All Statuses</option>
+            <?php foreach ($allowedStatuses as $opt): ?>
+                <option value="<?= e($opt) ?>" <?= $status === $opt ? 'selected' : '' ?>>
+                    <?= e(ucwords(str_replace('_', ' ', $opt))) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 0;">
+        <label for="priority">Priority</label>
+        <select id="priority" name="priority">
+            <option value="">All Priorities</option>
+            <?php foreach ($allowedPriorities as $p): ?>
+                <option value="<?= e($p) ?>" <?= $priority === $p ? 'selected' : '' ?>>
+                    <?= e(ucfirst($p)) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 0;">
+        <label for="category_id">Category</label>
+        <select id="category_id" name="category_id">
+            <option value="">All Categories</option>
+            <?php foreach ($categories as $cat): ?>
+                <option value="<?= (int) $cat['id'] ?>" <?= $categoryId === (int)$cat['id'] ? 'selected' : '' ?>>
+                    <?= e($cat['name']) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+
+    <div style="display: flex; gap: 8px;">
+        <button type="submit" class="btn btn-primary" style="height: 42px;">
+            Filter
+        </button>
+        <?php if ($search !== '' || $status !== '' || $priority !== '' || $categoryId): ?>
+            <a href="index.php" class="btn btn-secondary" style="height: 42px;" title="Reset filters">
+                Clear
+            </a>
+        <?php endif; ?>
+    </div>
+</form>
+
+<!-- Tickets Table -->
+<div class="card" style="padding: 0; overflow: hidden;">
+    <div class="table-wrapper" style="border: none; box-shadow: none;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Ticket No.</th>
+                    <th>Subject</th>
+                    <th>Category</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <?php if ($userRole !== 'employee'): ?>
+                        <th>Requester</th>
+                        <th>Assigned Agent</th>
+                    <?php endif; ?>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($tickets)): ?>
                     <tr>
-                        <th>Ticket No.</th>
-                        <th>Subject</th>
-                        <th>Category</th>
-                        <th>Priority</th>
-                        <th>Status</th>
-                        <th>Created</th>
-                        <?php if ($userRole !== 'employee'): ?>
-                            <th>Requester</th>
-                            <th>Assigned Agent</th>
-                        <?php endif; ?>
-                        <th>Action</th>
+                        <td colspan="<?= $userRole === 'employee' ? 7 : 9 ?>" style="text-align: center; color: var(--text-muted); padding: 40px 20px;">
+                            <div style="max-width: 380px; margin: 0 auto;">
+                                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 12px; color: var(--text-light);"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                                <p style="font-size: 16px; font-weight: 600; color: var(--text-main); margin-bottom: 4px;">No support tickets found</p>
+                                <p style="font-size: 13px; color: var(--text-muted);">
+                                    <?= ($search !== '' || $status !== '') ? 'Try clearing or modifying your search filters.' : 'There are currently no tickets in this view.' ?>
+                                </p>
+                            </div>
+                        </td>
                     </tr>
-                </thead>
-
-                <tbody>
-                    <?php if (count($tickets) === 0): ?>
+                <?php else: ?>
+                    <?php foreach ($tickets as $t): ?>
                         <tr>
-                            <td
-                                colspan="<?= $userRole === 'employee' ? 7 : 9 ?>"
-                            >
-                                No tickets found.
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <a href="show.php?id=<?= (int) $t['id'] ?>" class="ticket-num-link">
+                                        <?= e($t['ticket_number']) ?>
+                                    </a>
+                                    <button 
+                                        type="button" 
+                                        data-copy="<?= e($t['ticket_number']) ?>" 
+                                        style="background:none; border:none; color:var(--text-light); cursor:pointer; font-size:12px; padding:2px;" 
+                                        title="Copy reference"
+                                    >
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                    </button>
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="ticket-subject-cell" title="<?= e($t['subject']) ?>">
+                                    <a href="show.php?id=<?= (int) $t['id'] ?>" style="color:inherit; font-weight: 600;">
+                                        <?= e($t['subject']) ?>
+                                    </a>
+                                </div>
+                            </td>
+
+                            <td><?= e($t['category_name']) ?></td>
+                            <td><?= renderPriorityBadge($t['priority']) ?></td>
+                            <td><?= renderStatusBadge($t['status']) ?></td>
+                            <td><span title="<?= e($t['created_at']) ?>"><?= timeAgo($t['created_at']) ?></span></td>
+
+                            <?php if ($userRole !== 'employee'): ?>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <?= renderAvatar($t['creator_name'], 24) ?>
+                                        <span><?= e($t['creator_name']) ?></span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <?php if (!empty($t['agent_name'])): ?>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <?= renderAvatar($t['agent_name'], 24) ?>
+                                            <span><?= e($t['agent_name']) ?></span>
+                                        </div>
+                                    <?php else: ?>
+                                        <span class="badge" style="background:#f1f5f9; color:var(--text-muted);">Unassigned</span>
+                                    <?php endif; ?>
+                                </td>
+                            <?php endif; ?>
+
+                            <td style="text-align: right;">
+                                <a href="show.php?id=<?= (int) $t['id'] ?>" class="btn btn-secondary btn-sm">
+                                    Details &rarr;
+                                </a>
                             </td>
                         </tr>
-                    <?php else: ?>
-                        <?php foreach ($tickets as $ticket): ?>
-                            <tr>
-                                <td>
-                                    <?= ticketListEscape($ticket['ticket_number']) ?>
-                                </td>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
 
-                                <td>
-                                    <?= ticketListEscape($ticket['subject']) ?>
-                                </td>
-
-                                <td>
-                                    <?= ticketListEscape($ticket['category_name']) ?>
-                                </td>
-
-                                <td>
-                                    <?= ticketListEscape(ucfirst($ticket['priority'])) ?>
-                                </td>
-
-                                <td>
-                                    <?= ticketListEscape(
-                                        ucwords(str_replace('_', ' ', $ticket['status']))
-                                    ) ?>
-                                </td>
-
-                                <td>
-                                    <?= ticketListEscape($ticket['created_at']) ?>
-                                </td>
-
-                                <?php if ($userRole !== 'employee'): ?>
-                                    <td>
-                                        <?= ticketListEscape($ticket['creator_name']) ?>
-                                    </td>
-
-                                    <td>
-                                        <?= ticketListEscape(
-                                            $ticket['agent_name'] ?? 'Unassigned'
-                                        ) ?>
-                                    </td>
-                                <?php endif; ?>
-
-                                <td>
-                                    <a href="show.php?id=<?= (int) $ticket['id'] ?>">
-                                        View
-                                    </a>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-
-    </section>
-</main>
-
-</body>
-</html>
+<?php require_once __DIR__ . '/../../app/includes/footer.php'; ?>
