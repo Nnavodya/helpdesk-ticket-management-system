@@ -238,7 +238,7 @@ require_once __DIR__ . '/../../app/includes/header.php';
                                         <?= renderRoleBadge($comm['commenter_role']) ?>
                                     </div>
                                     <span class="comment-date" title="<?= e($comm['created_at']) ?>">
-                                        <?= timeAgo($comm['created_at']) ?>
+                                        <?= formatDateTime($comm['created_at']) ?>
                                     </span>
                                 </div>
                                 <div class="comment-text">
