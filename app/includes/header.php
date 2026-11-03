@@ -45,7 +45,7 @@ if ($isLoggedIn) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Master CSS -->
-    <link rel="stylesheet" href="<?= $baseUri ?>/assets/css/style.css?v=13">
+    <link rel="stylesheet" href="<?= $baseUri ?>/assets/css/style.css?v=14">
 </head>
 <body>
 
