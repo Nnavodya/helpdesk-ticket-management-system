@@ -117,6 +117,68 @@ CREATE TABLE IF NOT EXISTS ticket_history (
         ON DELETE RESTRICT
 );
 
+-- 6. Ticket attachments
+CREATE TABLE IF NOT EXISTS ticket_attachments (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    ticket_id INT UNSIGNED NOT NULL,
+    comment_id INT UNSIGNED NULL,
+    uploaded_by INT UNSIGNED NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    file_size INT UNSIGNED NOT NULL,
+    file_type VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_attachments_ticket (ticket_id),
+
+    CONSTRAINT fk_attachment_ticket
+        FOREIGN KEY (ticket_id)
+        REFERENCES tickets(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_attachment_user
+        FOREIGN KEY (uploaded_by)
+        REFERENCES users(id)
+        ON DELETE RESTRICT
+);
+
+-- 7. Password resets
+CREATE TABLE IF NOT EXISTS password_resets (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(150) NOT NULL,
+    token VARCHAR(64) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_reset_token (token),
+    INDEX idx_reset_email (email)
+);
+
+-- 8. In-app notifications
+CREATE TABLE IF NOT EXISTS notifications (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    ticket_id INT UNSIGNED NULL,
+    title VARCHAR(150) NOT NULL,
+    message VARCHAR(500) NOT NULL,
+    link VARCHAR(255) NULL,
+    is_read TINYINT(1) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_notif_user (user_id, is_read),
+    INDEX idx_notif_created (created_at),
+
+    CONSTRAINT fk_notif_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_notif_ticket
+        FOREIGN KEY (ticket_id)
+        REFERENCES tickets(id)
+        ON DELETE CASCADE
+);
+
 -- Default ticket categories
 INSERT IGNORE INTO categories (name, description) VALUES
 ('Hardware', 'Computer, laptop and device issues'),
@@ -124,3 +186,6 @@ INSERT IGNORE INTO categories (name, description) VALUES
 ('Network', 'Internet and network issues'),
 ('Account Access', 'Login and access issues'),
 ('Other', 'Other technical problems');
+
+
+
