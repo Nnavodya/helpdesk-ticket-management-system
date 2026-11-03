@@ -43,8 +43,9 @@ if ($userRole === 'employee') {
     $sql .= " AND t.created_by = :user_id";
     $params[':user_id'] = $userId;
 } elseif ($userRole === 'agent') {
-    $sql .= " AND (t.assigned_to = :user_id OR t.created_by = :user_id)";
-    $params[':user_id'] = $userId;
+    $sql .= " AND (t.assigned_to = :assigned_user_id OR t.created_by = :requester_user_id)";
+    $params[':assigned_user_id'] = $userId;
+    $params[':requester_user_id'] = $userId;
 }
 
 $stmt = $pdo->prepare($sql);
