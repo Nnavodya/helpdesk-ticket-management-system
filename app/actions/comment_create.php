@@ -64,8 +64,8 @@ try {
 
     // Insert comment
     $commentStmt = $pdo->prepare("
-        INSERT INTO ticket_comments (ticket_id, user_id, body)
-        VALUES (:ticket_id, :user_id, :body)
+        INSERT INTO ticket_comments (ticket_id, user_id, body, created_at)
+        VALUES (:ticket_id, :user_id, :body, CURRENT_TIMESTAMP)
     ");
     $commentStmt->execute([
         ':ticket_id' => $ticketId,
