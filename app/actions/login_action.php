@@ -40,6 +40,7 @@ try {
 
     // Generate a new session ID after successful authentication.
     session_regenerate_id(true);
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
     // Store only the user information needed by the application.
     $_SESSION['user_id'] = (int) $user['id'];

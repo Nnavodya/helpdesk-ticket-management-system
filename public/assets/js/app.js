@@ -123,6 +123,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // AJAX Mark All Read from Dropdown
         const markAllReadBtn = document.getElementById('dropdownMarkAllRead');
+        const basePath = document.body.dataset.appBasePath || '';
+        const notificationActionUrl = `${basePath}/actions/notification_action.php`;
+
+        const updateUnreadBadge = (unreadCount) => {
+            const badge = document.querySelector('.notification-badge');
+            if (unreadCount > 0) {
+                if (badge) {
+                    badge.textContent = unreadCount > 9 ? '9+' : String(unreadCount);
+                }
+            } else if (badge) {
+                badge.remove();
+            }
+
+            if (unreadCount === 0 && markAllReadBtn) {
+                markAllReadBtn.remove();
+            }
+        };
+
+        notifDropdown.addEventListener('click', async (e) => {
+            const button = e.target.closest('[data-mark-notification-read]');
+            if (!button) return;
+
+            button.disabled = true;
+            try {
+                const formData = new FormData();
+                formData.append('action', 'mark_read');
+                formData.append('id', button.dataset.notificationId);
+                formData.append('csrf_token', button.dataset.csrf);
+
+                const response = await fetch(notificationActionUrl, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Could not mark notification as read.');
+                }
+
+                const item = button.closest('.notification-item');
+                if (item) {
+                    item.classList.remove('unread');
+                    item.querySelector('.notification-dot')?.style.setProperty('background', 'transparent');
+                    button.remove();
+                }
+                updateUnreadBadge(data.unread_count);
+            } catch (err) {
+                button.disabled = false;
+                button.textContent = 'Retry';
+                button.title = err.message;
+                console.error('Failed to mark notification as read', err);
+            }
+        });
+
         if (markAllReadBtn) {
             markAllReadBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
@@ -132,23 +187,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append('action', 'mark_all_read');
                     formData.append('csrf_token', csrfToken);
 
-                    const basePath = document.body.dataset.appBasePath || '';
-                    const res = await fetch(`${basePath}/actions/notification_action.php`, {
+                    const res = await fetch(notificationActionUrl, {
                         method: 'POST',
                         body: formData,
                         headers: { 'X-Requested-With': 'XMLHttpRequest' }
                     });
                     const data = await res.json();
-                    if (data.success) {
-                        const badge = document.querySelector('.notification-badge');
-                        if (badge) badge.remove();
+                    if (res.ok && data.success) {
                         document.querySelectorAll('.notification-item.unread').forEach(item => {
                             item.classList.remove('unread');
+                            item.querySelector('.notification-dot')?.style.setProperty('background', 'transparent');
+                            item.querySelector('[data-mark-notification-read]')?.remove();
                         });
-                        markAllReadBtn.style.display = 'none';
+                        updateUnreadBadge(data.unread_count);
+                    } else {
+                        throw new Error(data.message || 'Could not mark notifications as read.');
                     }
                 } catch (err) {
                     console.error('Failed to mark notifications as read', err);
+                    markAllReadBtn.disabled = false;
                 }
             });
         }

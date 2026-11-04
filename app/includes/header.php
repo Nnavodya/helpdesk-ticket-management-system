@@ -143,14 +143,26 @@ if ($isLoggedIn) {
                                     $isItemRead = (int)$rn['is_read'] === 1;
                                     $itemLink = !empty($rn['link']) ? e($rn['link']) : $baseUri . '/notifications.php';
                                 ?>
-                                    <a href="<?= $itemLink ?>" class="notification-item <?= !$isItemRead ? 'unread' : '' ?>">
+                                    <div class="notification-item <?= !$isItemRead ? 'unread' : '' ?>" data-notification-id="<?= (int) $rn['id'] ?>">
                                         <span class="notification-dot" style="margin-top: 5px; width: 6px; height: 6px; border-radius: 50%; background: <?= !$isItemRead ? 'var(--primary)' : 'transparent' ?>; flex-shrink: 0;"></span>
                                         <div class="notification-item-content">
-                                            <div class="notification-item-title"><?= e($rn['title']) ?></div>
-                                            <div class="notification-item-msg"><?= e($rn['message']) ?></div>
+                                            <a href="<?= $itemLink ?>" class="notification-item-link">
+                                                <div class="notification-item-title"><?= e($rn['title']) ?></div>
+                                                <div class="notification-item-msg"><?= e($rn['message']) ?></div>
+                                            </a>
                                             <div class="notification-item-time"><?= timeAgo($rn['created_at']) ?></div>
                                         </div>
-                                    </a>
+                                        <?php if (!$isItemRead): ?>
+                                            <button
+                                                type="button"
+                                                class="notification-mark-read"
+                                                data-mark-notification-read
+                                                data-notification-id="<?= (int) $rn['id'] ?>"
+                                                data-csrf="<?= e(csrfToken()) ?>"
+                                                aria-label="Mark <?= e($rn['title']) ?> as read"
+                                            >Mark read</button>
+                                        <?php endif; ?>
+                                    </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </div>

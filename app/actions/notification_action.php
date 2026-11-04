@@ -15,58 +15,96 @@ requireLogin();
 $userId = (int) $_SESSION['user_id'];
 $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
-// Support POST (preferred) or GET (for direct click-through redirection)
-$action = $_POST['action'] ?? $_GET['action'] ?? '';
-$notifId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT) ?? filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-$redirectUrl = $_POST['redirect'] ?? $_GET['redirect'] ?? appUrl('notifications.php');
+$respond = static function (int $status, array $payload) use ($isAjax): void {
+    if ($isAjax) {
+        http_response_code($status);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($payload);
+        exit;
+    }
 
-if ($action === 'mark_read' && $notifId) {
-    try {
+    if ($status >= 400) {
+        setFlash('error', $payload['message']);
+    } else {
+        setFlash('success', $payload['message']);
+    }
+
+    header('Location: ' . appUrl('notifications.php'));
+    exit;
+};
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    $respond(405, ['success' => false, 'message' => 'Method not allowed.']);
+}
+
+$postedToken = $_POST['csrf_token'] ?? '';
+if (!is_string($postedToken) || !verifyCsrfToken($postedToken)) {
+    $respond(403, ['success' => false, 'message' => 'Invalid security token. Refresh the page and try again.']);
+}
+
+$action = $_POST['action'] ?? '';
+
+try {
+    if ($action === 'mark_read') {
+        $notifId = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT);
+        if (!$notifId || $notifId < 1) {
+            $respond(400, ['success' => false, 'message' => 'Invalid notification.']);
+        }
+
         $stmt = $pdo->prepare('
-            UPDATE notifications 
-            SET is_read = 1 
-            WHERE id = :id AND user_id = :user_id
+            UPDATE notifications
+            SET is_read = 1
+            WHERE id = :id AND user_id = :user_id AND is_read = 0
         ');
         $stmt->execute([
-            ':id'      => $notifId,
+            ':id' => $notifId,
             ':user_id' => $userId,
         ]);
 
-        if ($isAjax) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => true,
-                'unread_count' => getUnreadNotificationCount($pdo, $userId),
-            ]);
-            exit;
-        }
-    } catch (PDOException $e) {
-        error_log('Notification mark read error: ' . $e->getMessage());
-    }
-} elseif ($action === 'mark_all_read') {
-    // CSRF check for mark all read
-    $token = $_POST['csrf_token'] ?? $_GET['csrf_token'] ?? '';
-    if (verifyCsrfToken($token)) {
-        try {
-            $stmt = $pdo->prepare('
-                UPDATE notifications 
-                SET is_read = 1 
-                WHERE user_id = :user_id AND is_read = 0
+        if ($stmt->rowCount() === 0) {
+            $ownedStmt = $pdo->prepare('
+                SELECT is_read
+                FROM notifications
+                WHERE id = :id AND user_id = :user_id
             ');
-            $stmt->execute([':user_id' => $userId]);
+            $ownedStmt->execute([
+                ':id' => $notifId,
+                ':user_id' => $userId,
+            ]);
+            $isAlreadyRead = $ownedStmt->fetchColumn();
 
-            if ($isAjax) {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => true, 'unread_count' => 0]);
-                exit;
+            if ($isAlreadyRead === false) {
+                $respond(404, ['success' => false, 'message' => 'Notification not found.']);
             }
-            setFlash('success', 'All notifications marked as read.');
-        } catch (PDOException $e) {
-            error_log('Notification mark all read error: ' . $e->getMessage());
         }
+
+        $respond(200, [
+            'success' => true,
+            'unread_count' => getUnreadNotificationCount($pdo, $userId),
+            'message' => 'Notification marked as read.',
+        ]);
     }
+
+    if ($action === 'mark_all_read') {
+        $stmt = $pdo->prepare('
+            UPDATE notifications
+            SET is_read = 1
+            WHERE user_id = :user_id AND is_read = 0
+        ');
+        $stmt->execute([':user_id' => $userId]);
+
+        $respond(200, [
+            'success' => true,
+            'unread_count' => 0,
+            'message' => 'All notifications marked as read.',
+        ]);
+    }
+
+    $respond(400, ['success' => false, 'message' => 'Unknown notification action.']);
+} catch (PDOException $e) {
+    error_log('Notification action failed: ' . $e->getMessage());
+    $respond(500, ['success' => false, 'message' => 'Could not update the notification. Please try again.']);
 }
 
-// Redirect back
-header('Location: ' . $redirectUrl);
+header('Location: ' . appUrl('notifications.php'));
 exit;

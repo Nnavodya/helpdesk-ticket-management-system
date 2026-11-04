@@ -19,6 +19,7 @@ Testing encompasses the three user roles (**Employee**, **Support Agent**, and *
 | **TC-05** | Auth | User Login (Invalid Credentials) | 1. Enter incorrect password or non-existent email | Rejected with "Invalid email or password, or account is inactive". No session created. | **Passed** |
 | **TC-06** | Auth | Inactive Account Login | 1. Admin sets `is_active=0` on an account<br>2. User attempts to log in | Login blocked even with correct password. | **Passed** |
 | **TC-07** | Auth | Secure Logout | 1. Click "Logout" (POST with CSRF token)<br>2. Check session | Session destroyed, user redirected to `/login.php`. Accessing dashboard redirects to login. | **Passed** |
+| **TC-30** | Auth | Logout After Fresh Login | 1. Log in successfully<br>2. Submit the logout form rendered after login | Rotated session and CSRF token match; logout destroys the session and redirects to login. | **Pending** |
 | **TC-08** | RBAC | Guest Access to Protected Pages | 1. Open `/dashboard.php` without logging in | Redirected to `/login.php` with error message. | **Passed** |
 | **TC-09** | RBAC | Employee Access to Admin Pages | 1. Log in as employee<br>2. Attempt to open `/admin/users.php` or `/admin/reports.php` | Access denied with HTTP 403 Forbidden. | **Passed** |
 | **TC-10** | RBAC | Agent Access to User Management | 1. Log in as support agent<br>2. Access `/admin/users.php` | Access denied with HTTP 403 Forbidden. | **Passed** |
@@ -40,6 +41,7 @@ Testing encompasses the three user roles (**Employee**, **Support Agent**, and *
 | **TC-26** | Notif | Notification Event Dispatch | 1. Create ticket, assign agent, change status, post reply | Notification generated in `notifications` table for relevant recipient. | **Passed** |
 | **TC-27** | Notif | Notification Bell & Unread Badge | 1. User logs in with unread notifications | Unread count badge rendered on bell; clicking toggles preview popup. | **Passed** |
 | **TC-28** | Notif | Mark Notifications as Read | 1. Click "Mark all read" or individual mark read | Unread badge removed, `is_read=1` recorded in database via AJAX/POST. | **Passed** |
+| **TC-31** | Notif | Mark Individual Dropdown Notification as Read | 1. Open notification dropdown<br>2. Click "Mark read" on one unread notification | Only the selected notification is marked read; unread badge count updates without navigating away. | **Pending** |
 | **TC-29** | Security | Attachment Access Control | 1. Copy an attachment URL from a ticket<br>2. Open it while logged out and while signed in as a user without ticket access<br>3. Request the stored file URL directly | Unauthorized requests return 404, and uploaded files are not directly accessible from the web. | **Pending** |
 
 ---
