@@ -79,11 +79,12 @@ helpdesk-system/
 │   │   └── ticket_update.php          # Status updating & audit history logging
 │   ├── config/
 │   │   └── database.php               # PDO database connection configuration
-│   └── includes/
-│       ├── auth.php                   # requireLogin() and requireRole() guards
-│       ├── footer.php                 # Global footer & scripts
-│       ├── functions.php              # Badges, CSRF, flash notifications, avatars
-│       └── header.php                 # Global navigation & user profile bar
+│   ├── includes/
+│   │   ├── auth.php                   # requireLogin() and requireRole() guards
+│   │   ├── footer.php                 # Global footer & scripts
+│   │   ├── functions.php              # Badges, CSRF, flash notifications, avatars
+│   │   └── header.php                 # Global navigation & user profile bar
+│   └── .htaccess                      # Blocks direct HTTP access to internal PHP files
 │
 ├── database/
 │   └── schema.sql                     # Complete database schema and seed data
@@ -98,12 +99,13 @@ helpdesk-system/
 │   │   │   └── style.css              # Master modern SaaS design system
 │   │   └── js/
 │   │       └── app.js                 # Live search, copy button, auto-alerts
+│   ├── actions/                       # Public entry points for protected app actions
 │   ├── tickets/
 │   │   ├── create.php                 # New ticket submission form
 │   │   ├── index.php                  # Ticket list with filters & live search
 │   │   └── show.php                   # Ticket details, discussion, and timeline
-│   ├── uploads/
-│   │   └── tickets/                   # Uploaded screenshots & attachments
+│   ├── attachment.php                # Authorized attachment delivery
+│   ├── uploads/                       # Legacy upload area; direct access is blocked
 │   ├── dashboard.php                  # Role-specific user dashboard
 │   ├── forgot_password.php            # Request password reset page
 │   ├── index.php                      # Public landing page & ticket lookup
@@ -112,6 +114,8 @@ helpdesk-system/
 │   ├── register.php                   # Employee registration page
 │   └── reset_password.php             # New password submission page
 │
+├── storage/
+│   └── ticket-uploads/                # Private ticket attachment storage
 ├── tests/
 │   └── test-cases.md                  # Comprehensive test matrix and QA plan
 ├── .gitignore
@@ -157,6 +161,14 @@ Open your browser and visit:
 ```text
 http://localhost/helpdesk-system/public/
 ```
+
+### Production Web Server and Uploads
+
+- Configure the web server's document root to the `public/` directory, not the repository root. Preserve or configure the application's URL base (`/helpdesk-system/public`) to match the deployment.
+- The public action entry points under `public/actions/` include their implementation from `app/`. Keep `app/`, `database/`, `tests/`, and `storage/` outside the document root where possible.
+- Apache deployments should honor the included `.htaccess` access restrictions. Nginx and other servers must be configured with equivalent rules; `.htaccess` is Apache-specific.
+- New attachments are stored in `storage/ticket-uploads/` and are delivered through an authenticated endpoint. Existing files in `public/uploads/tickets/` should remain blocked from direct web access; the application can still serve them to users authorized to view the ticket.
+- Ensure the PHP/web-server account can write to `storage/ticket-uploads/`. Do not include runtime uploads in release packages or source control.
 
 ---
 

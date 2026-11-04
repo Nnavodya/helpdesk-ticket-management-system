@@ -107,9 +107,9 @@ try {
         $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
 
         if ($file['size'] <= $maxBytes && in_array($ext, $allowedExts, true)) {
-            $uploadDir = __DIR__ . '/../../public/uploads/tickets/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
+            $uploadDir = __DIR__ . '/../../storage/ticket-uploads/';
+            if (!is_dir($uploadDir) && !mkdir($uploadDir, 0750, true) && !is_dir($uploadDir)) {
+                throw new RuntimeException('Could not create the private ticket upload directory.');
             }
 
             $safeFileName = 'ticket_' . $ticketId . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
@@ -126,7 +126,7 @@ try {
                         'ticket_id'   => $ticketId,
                         'uploaded_by' => (int) $_SESSION['user_id'],
                         'file_name'   => $originalName,
-                        'file_path'   => 'uploads/tickets/' . $safeFileName,
+                        'file_path'   => $safeFileName,
                         'file_size'   => (int) $file['size'],
                         'file_type'   => $ext,
                     ]);

@@ -73,7 +73,7 @@ unset($_SESSION['dev_reset_link'], $_SESSION['dev_reset_email']);
                 </div>
             <?php endif; ?>
 
-            <form method="POST" action="../app/actions/password_reset_request.php">
+            <form method="POST" action="actions/password_reset_request.php">
                 <?= csrfField() ?>
 
                 <div class="form-group">

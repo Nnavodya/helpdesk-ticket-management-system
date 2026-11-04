@@ -180,7 +180,7 @@ require_once __DIR__ . '/../../app/includes/header.php';
                     <div style="display: flex; flex-wrap: wrap; gap: 12px;">
                         <?php foreach ($attachments as $att): 
                             $isImg = in_array(strtolower($att['file_type']), ['png', 'jpg', 'jpeg'], true);
-                            $fileUrl = '/helpdesk-system/public/' . e($att['file_path']);
+                            $fileUrl = '../attachment.php?id=' . (int) $att['id'];
                         ?>
                             <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px; display: flex; align-items: center; gap: 10px; max-width: 320px;">
                                 <?php if ($isImg): ?>
@@ -253,7 +253,7 @@ require_once __DIR__ . '/../../app/includes/header.php';
             <!-- Add Comment Form -->
             <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border);">
                 <h3 style="font-size: 15px; font-weight: 600; margin-bottom: 12px;">Add a Reply</h3>
-                <form method="POST" action="../../app/actions/comment_create.php" enctype="multipart/form-data">
+                <form method="POST" action="../actions/comment_create.php" enctype="multipart/form-data">
                     <?= csrfField() ?>
                     <input type="hidden" name="ticket_id" value="<?= (int) $ticket['id'] ?>">
 
@@ -298,7 +298,7 @@ require_once __DIR__ . '/../../app/includes/header.php';
                     <h2 class="card-title">Manage Status</h2>
                 </div>
 
-                <form method="POST" action="../../app/actions/ticket_update.php">
+                <form method="POST" action="../actions/ticket_update.php">
                     <?= csrfField() ?>
                     <input type="hidden" name="ticket_id" value="<?= (int) $ticket['id'] ?>">
 

@@ -53,7 +53,7 @@ require_once __DIR__ . '/../../app/includes/header.php';
 <?php endif; ?>
 
 <div class="card" style="max-width: 820px; margin: 0 auto;">
-    <form method="POST" action="../../app/actions/ticket_create.php" enctype="multipart/form-data">
+    <form method="POST" action="../actions/ticket_create.php" enctype="multipart/form-data">
         <?= csrfField() ?>
 
         <!-- Subject -->

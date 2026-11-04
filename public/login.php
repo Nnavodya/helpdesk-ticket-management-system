@@ -63,7 +63,7 @@ unset($_SESSION['success']);
                 </div>
             <?php endif; ?>
 
-            <form method="POST" action="../app/actions/login_action.php">
+            <form method="POST" action="actions/login_action.php">
                 <div class="form-group">
                     <label for="email">Email Address</label>
                     <input

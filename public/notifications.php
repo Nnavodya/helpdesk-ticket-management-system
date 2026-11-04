@@ -48,7 +48,7 @@ require_once __DIR__ . '/../app/includes/header.php';
 
     <div style="display: flex; gap: 10px; align-items: center;">
         <?php if ($unreadCount > 0): ?>
-            <form method="POST" action="/helpdesk-system/app/actions/notification_action.php" style="margin: 0;">
+            <form method="POST" action="/helpdesk-system/public/actions/notification_action.php" style="margin: 0;">
                 <?= csrfField() ?>
                 <input type="hidden" name="action" value="mark_all_read">
                 <input type="hidden" name="redirect" value="../../public/notifications.php">
@@ -110,7 +110,7 @@ require_once __DIR__ . '/../app/includes/header.php';
                     </div>
 
                     <?php if (!$isRead): ?>
-                        <form method="POST" action="/helpdesk-system/app/actions/notification_action.php" style="margin: 0; flex-shrink: 0;">
+                        <form method="POST" action="/helpdesk-system/public/actions/notification_action.php" style="margin: 0; flex-shrink: 0;">
                             <?= csrfField() ?>
                             <input type="hidden" name="action" value="mark_read">
                             <input type="hidden" name="id" value="<?= (int) $n['id'] ?>">

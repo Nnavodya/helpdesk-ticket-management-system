@@ -17,3 +17,9 @@ desktop.ini
 # Temporary files
 *.tmp
 *.bak
+
+# Private ticket uploads
+/storage/ticket-uploads/*
+!/storage/ticket-uploads/.gitkeep
+/public/uploads/tickets/*
+!/public/uploads/tickets/index.html

@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append('action', 'mark_all_read');
                     formData.append('csrf_token', csrfToken);
 
-                    const res = await fetch('/helpdesk-system/app/actions/notification_action.php', {
+                    const res = await fetch('/helpdesk-system/public/actions/notification_action.php', {
                         method: 'POST',
                         body: formData,
                         headers: { 'X-Requested-With': 'XMLHttpRequest' }

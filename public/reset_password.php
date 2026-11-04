@@ -100,7 +100,7 @@ try {
                     </a>
                 </div>
             <?php else: ?>
-                <form method="POST" action="../app/actions/password_reset_submit.php">
+                <form method="POST" action="actions/password_reset_submit.php">
                     <?= csrfField() ?>
                     <input type="hidden" name="token" value="<?= e($token) ?>">
 
