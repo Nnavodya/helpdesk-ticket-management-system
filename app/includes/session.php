@@ -3,6 +3,8 @@
  * Start sessions with production-safe cookie defaults.
  */
 
+require_once __DIR__ . '/paths.php';
+
 if (session_status() === PHP_SESSION_NONE) {
     $appEnvironment = strtolower(trim(getenv('APP_ENV') ?: 'development'));
     $httpsValue = strtolower((string) ($_SERVER['HTTPS'] ?? ''));

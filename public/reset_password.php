@@ -7,7 +7,7 @@
 require_once __DIR__ . '/../app/includes/session.php';
 
 if (isset($_SESSION['user_id'])) {
-    header('Location: /helpdesk-system/public/dashboard.php');
+    header('Location: ' . appUrl('dashboard.php'));
     exit;
 }
 
@@ -58,7 +58,7 @@ try {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/helpdesk-system/public/assets/css/style.css?v=12">
+    <link rel="stylesheet" href="<?= e(appUrl('assets/css/style.css')) ?>?v=12">
 </head>
 <body style="background: radial-gradient(circle at top, #eef2ff 0%, #f8fafc 100%);">
 
@@ -145,6 +145,6 @@ try {
         </div>
     </div>
 
-    <script src="/helpdesk-system/public/assets/js/app.js?v=5"></script>
+    <script src="<?= e(appUrl('assets/js/app.js')) ?>?v=5"></script>
 </body>
 </html>

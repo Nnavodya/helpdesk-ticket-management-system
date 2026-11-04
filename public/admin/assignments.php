@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $ticketId,
                     'Ticket Assigned: ' . $ticket['ticket_number'],
                     'You have been assigned ticket ' . $ticket['ticket_number'] . ' (' . $ticket['subject'] . ')',
-                    '/helpdesk-system/public/tickets/show.php?id=' . $ticketId
+                    appUrl('tickets/show.php') . '?id=' . $ticketId
                 );
             }
 
@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $ticketId,
                     'Agent Assigned: ' . $ticket['ticket_number'],
                     $note . ' for your ticket ' . $ticket['ticket_number'],
-                    '/helpdesk-system/public/tickets/show.php?id=' . $ticketId
+                    appUrl('tickets/show.php') . '?id=' . $ticketId
                 );
             }
 

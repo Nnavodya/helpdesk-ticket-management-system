@@ -4,7 +4,7 @@ require_once __DIR__ . '/../includes/session.php';
 require_once __DIR__ . '/../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ../../public/login.php');
+    header('Location: ' . appUrl('login.php'));
     exit;
 }
 
@@ -13,7 +13,7 @@ $password = $_POST['password'] ?? '';
 
 if ($email === '' || $password === '') {
     $_SESSION['error'] = 'Please enter your email and password.';
-    header('Location: ../../public/login.php');
+    header('Location: ' . appUrl('login.php'));
     exit;
 }
 
@@ -34,7 +34,7 @@ try {
         || (int) $user['is_active'] !== 1) {
 
         $_SESSION['error'] = 'Invalid email or password, or account is inactive.';
-        header('Location: ../../public/login.php');
+        header('Location: ' . appUrl('login.php'));
         exit;
     }
 
@@ -51,9 +51,9 @@ try {
     unset($_SESSION['pending_ticket_lookup']);
 
     if (is_string($pendingTicketLookup) && $pendingTicketLookup !== '') {
-        header('Location: ../../public/index.php?ticket_number=' . urlencode($pendingTicketLookup));
+        header('Location: ' . appUrl('index.php') . '?ticket_number=' . urlencode($pendingTicketLookup));
     } else {
-        header('Location: ../../public/dashboard.php');
+        header('Location: ' . appUrl('dashboard.php'));
     }
     exit;
 
@@ -61,6 +61,6 @@ try {
     error_log($e->getMessage());
 
     $_SESSION['error'] = 'Something went wrong. Please try again.';
-    header('Location: ../../public/login.php');
+    header('Location: ' . appUrl('login.php'));
     exit;
 }

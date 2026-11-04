@@ -48,10 +48,10 @@ require_once __DIR__ . '/../app/includes/header.php';
 
     <div style="display: flex; gap: 10px; align-items: center;">
         <?php if ($unreadCount > 0): ?>
-            <form method="POST" action="/helpdesk-system/public/actions/notification_action.php" style="margin: 0;">
+            <form method="POST" action="<?= e(appUrl('actions/notification_action.php')) ?>" style="margin: 0;">
                 <?= csrfField() ?>
                 <input type="hidden" name="action" value="mark_all_read">
-                <input type="hidden" name="redirect" value="../../public/notifications.php">
+                <input type="hidden" name="redirect" value="<?= e(appUrl('notifications.php')) ?>">
                 <button type="submit" class="btn btn-secondary btn-sm">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     Mark All as Read
@@ -110,11 +110,11 @@ require_once __DIR__ . '/../app/includes/header.php';
                     </div>
 
                     <?php if (!$isRead): ?>
-                        <form method="POST" action="/helpdesk-system/public/actions/notification_action.php" style="margin: 0; flex-shrink: 0;">
+                        <form method="POST" action="<?= e(appUrl('actions/notification_action.php')) ?>" style="margin: 0; flex-shrink: 0;">
                             <?= csrfField() ?>
                             <input type="hidden" name="action" value="mark_read">
                             <input type="hidden" name="id" value="<?= (int) $n['id'] ?>">
-                            <input type="hidden" name="redirect" value="../../public/notifications.php">
+                            <input type="hidden" name="redirect" value="<?= e(appUrl('notifications.php')) ?>">
                             <button type="submit" class="btn btn-secondary btn-sm" title="Mark as read" style="padding: 4px 10px; font-size: 12px;">
                                 ✓ Mark read
                             </button>

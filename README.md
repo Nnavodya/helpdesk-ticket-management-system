@@ -148,9 +148,10 @@ C:\xampp\htdocs\helpdesk-system
 4. Select the file: `c:\xampp\htdocs\helpdesk-system\database\schema.sql` and click **Import**.
 
 ### Step 4: Configure Database Settings
-For local XAMPP development, the application defaults to `127.0.0.1`, database `helpdesk_db`, and user `root` with an empty password. For deployment, configure these environment variables and set `APP_ENV=production`:
+For local XAMPP development, the application defaults to `127.0.0.1`, database `helpdesk_db`, and user `root` with an empty password. For deployment, configure these environment variables and set `APP_ENV=production`. Set `APP_BASE_PATH` to the URL path where the `public/` directory is served:
 ```text
 APP_ENV=production
+APP_BASE_PATH=/
 DB_HOST=your-database-host
 DB_NAME=helpdesk_db
 DB_USER=helpdesk_app
@@ -168,7 +169,7 @@ http://localhost/helpdesk-system/public/
 
 ### Production Web Server and Uploads
 
-- Configure the web server's document root to the `public/` directory, not the repository root. Preserve or configure the application's URL base (`/helpdesk-system/public`) to match the deployment.
+- Configure the web server's document root to the `public/` directory, not the repository root. Set `APP_BASE_PATH` to the URL path serving `public/` (for example, `/helpdesk-system/public` for the local XAMPP layout, or `/` when `public/` is the domain document root).
 - The public action entry points under `public/actions/` include their implementation from `app/`. Keep `app/`, `database/`, `tests/`, and `storage/` outside the document root where possible.
 - Apache deployments should honor the included `.htaccess` access restrictions. Nginx and other servers must be configured with equivalent rules; `.htaccess` is Apache-specific.
 - New attachments are stored in `storage/ticket-uploads/` and are delivered through an authenticated endpoint. Existing files in `public/uploads/tickets/` should remain blocked from direct web access; the application can still serve them to users authorized to view the ticket.

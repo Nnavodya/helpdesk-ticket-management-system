@@ -16,8 +16,7 @@ $userId = (int) ($_SESSION['user_id'] ?? 0);
 $userName = $_SESSION['user_name'] ?? 'User';
 $userRole = $_SESSION['user_role'] ?? 'employee';
 
-// Base application path for links
-$baseUri = '/helpdesk-system/public';
+$baseUri = appBasePath();
 
 $unreadNotifCount = 0;
 $recentNotifs = [];
@@ -45,7 +44,7 @@ if ($isLoggedIn) {
     <!-- Master CSS -->
     <link rel="stylesheet" href="<?= $baseUri ?>/assets/css/style.css?v=14">
 </head>
-<body>
+<body data-app-base-path="<?= e($baseUri) ?>">
 
 <header class="app-navbar">
     <div class="navbar-container">

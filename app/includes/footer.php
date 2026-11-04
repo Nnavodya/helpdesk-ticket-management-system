@@ -4,7 +4,7 @@
  * Help Desk & Ticket Management System
  */
 
-$baseUri = '/helpdesk-system/public';
+$baseUri = appBasePath();
 ?>
 </main><!-- /.page-container -->
 

@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $csrfToken = $_POST['csrf_token'] ?? '';
     if (!verifyCsrfToken($csrfToken)) {
         setFlash('error', 'Invalid security token. Please try again.');
-        header('Location: /helpdesk-system/public/admin/users.php');
+        header('Location: ' . appUrl('admin/users.php'));
         exit;
     }
 
@@ -30,14 +30,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$userId || !in_array($newRole, $allowedRoles, true) || !in_array($newActiveStatus, ['0', '1'], true)) {
         setFlash('error', 'Please select valid user settings.');
-        header('Location: /helpdesk-system/public/admin/users.php');
+        header('Location: ' . appUrl('admin/users.php'));
         exit;
     }
 
     // Prevent current admin from deactivating self or losing admin role
     if ((int) $userId === (int) $_SESSION['user_id'] && ($newRole !== 'admin' || $newActiveStatus !== '1')) {
         setFlash('error', 'You cannot deactivate your own account or remove your admin role.');
-        header('Location: /helpdesk-system/public/admin/users.php');
+        header('Location: ' . appUrl('admin/users.php'));
         exit;
     }
 
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if ($activeAdminCount <= 1) {
                     setFlash('error', 'The system must have at least one active administrator.');
-                    header('Location: /helpdesk-system/public/admin/users.php');
+                    header('Location: ' . appUrl('admin/users.php'));
                     exit;
                 }
             }
@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         setFlash('error', 'Could not update user settings. Please try again.');
     }
 
-    header('Location: /helpdesk-system/public/admin/users.php');
+    header('Location: ' . appUrl('admin/users.php'));
     exit;
 }
 
@@ -205,7 +205,7 @@ require_once __DIR__ . '/../../app/includes/header.php';
 
                             <td>
                                 <!-- Form container for this user -->
-                                <form id="<?= $formId ?>" method="POST" action="/helpdesk-system/public/admin/users.php" style="margin: 0; display: inline;">
+                                <form id="<?= $formId ?>" method="POST" action="<?= e(appUrl('admin/users.php')) ?>" style="margin: 0; display: inline;">
                                     <?= csrfField() ?>
                                     <input type="hidden" name="user_id" value="<?= (int) $u['id'] ?>">
                                 </form>

@@ -8,7 +8,7 @@ require_once __DIR__ . '/../includes/functions.php';
 requireLogin();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ../../public/tickets/index.php');
+    header('Location: ' . appUrl('tickets/index.php'));
     exit;
 }
 
@@ -36,7 +36,7 @@ if (!$ticketId || $ticketId < 1) {
 
 if (!is_string($newStatus) || !in_array($newStatus, $allowedStatuses, true)) {
     setFlash('error', 'Please select a valid ticket status.');
-    header('Location: ../../public/tickets/show.php?id=' . $ticketId);
+    header('Location: ' . appUrl('tickets/show.php') . '?id=' . $ticketId);
     exit;
 }
 
@@ -81,7 +81,7 @@ try {
     if ($oldStatus === $newStatus) {
         $pdo->commit();
         setFlash('info', 'The ticket already has this status.');
-        header('Location: ../../public/tickets/show.php?id=' . $ticketId);
+        header('Location: ' . appUrl('tickets/show.php') . '?id=' . $ticketId);
         exit;
     }
 
@@ -131,7 +131,7 @@ try {
             $ticketId,
             'Status Changed: ' . $ticket['ticket_number'],
             'Your ticket status was updated to "' . ucwords(str_replace('_', ' ', $newStatus)) . '" by ' . ($_SESSION['user_name'] ?? 'Staff'),
-            '/helpdesk-system/public/tickets/show.php?id=' . $ticketId
+            appUrl('tickets/show.php') . '?id=' . $ticketId
         );
     }
 
@@ -143,13 +143,13 @@ try {
             $ticketId,
             'Ticket Update: ' . $ticket['ticket_number'],
             'Assigned ticket status was updated to "' . ucwords(str_replace('_', ' ', $newStatus)) . '" by ' . ($_SESSION['user_name'] ?? 'Admin'),
-            '/helpdesk-system/public/tickets/show.php?id=' . $ticketId
+            appUrl('tickets/show.php') . '?id=' . $ticketId
         );
     }
 
     setFlash('success', 'Ticket status updated to ' . ucwords(str_replace('_', ' ', $newStatus)) . ' successfully.');
 
-    header('Location: ../../public/tickets/show.php?id=' . $ticketId);
+    header('Location: ' . appUrl('tickets/show.php') . '?id=' . $ticketId);
     exit;
 
 } catch (Throwable $e) {
@@ -160,6 +160,6 @@ try {
     error_log('Ticket status update failed: ' . $e->getMessage());
 
     setFlash('error', 'Could not update the ticket status. Please try again.');
-    header('Location: ../../public/tickets/show.php?id=' . $ticketId);
+    header('Location: ' . appUrl('tickets/show.php') . '?id=' . $ticketId);
     exit;
 }

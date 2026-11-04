@@ -3,7 +3,7 @@ require_once __DIR__ . '/../app/includes/session.php';
 
 // Only accept logout requests submitted through POST.
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: dashboard.php');
+    header('Location: ' . appUrl('dashboard.php'));
     exit;
 }
 
@@ -44,5 +44,5 @@ if (ini_get('session.use_cookies')) {
 
 session_destroy();
 
-header('Location: login.php');
+header('Location: ' . appUrl('login.php'));
 exit;

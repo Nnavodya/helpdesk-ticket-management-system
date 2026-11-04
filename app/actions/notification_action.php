@@ -18,7 +18,7 @@ $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP
 // Support POST (preferred) or GET (for direct click-through redirection)
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 $notifId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT) ?? filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-$redirectUrl = $_POST['redirect'] ?? $_GET['redirect'] ?? '../../public/notifications.php';
+$redirectUrl = $_POST['redirect'] ?? $_GET['redirect'] ?? appUrl('notifications.php');
 
 if ($action === 'mark_read' && $notifId) {
     try {

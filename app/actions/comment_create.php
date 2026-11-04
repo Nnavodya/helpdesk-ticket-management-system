@@ -11,7 +11,7 @@ require_once __DIR__ . '/../includes/functions.php';
 requireLogin();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ../../public/tickets/index.php');
+    header('Location: ' . appUrl('tickets/index.php'));
     exit;
 }
 
@@ -30,7 +30,7 @@ if (!$ticketId || $ticketId < 1) {
 $body = trim($_POST['body'] ?? '');
 if ($body === '' || mb_strlen($body) > 3000) {
     setFlash('error', 'Comment is required and must not exceed 3000 characters.');
-    header('Location: ../../public/tickets/show.php?id=' . $ticketId);
+    header('Location: ' . appUrl('tickets/show.php') . '?id=' . $ticketId);
     exit;
 }
 
@@ -146,7 +146,7 @@ try {
                 $ticketId,
                 'New Reply: ' . $ticket['ticket_number'],
                 $commenterName . ' commented: "' . $commentSnippet . '"',
-                '/helpdesk-system/public/tickets/show.php?id=' . $ticketId
+                appUrl('tickets/show.php') . '?id=' . $ticketId
             );
         } else {
             notifyAdmins(
@@ -154,7 +154,7 @@ try {
                 $ticketId,
                 'New Reply: ' . $ticket['ticket_number'],
                 $commenterName . ' commented: "' . $commentSnippet . '"',
-                '/helpdesk-system/public/tickets/show.php?id=' . $ticketId,
+                appUrl('tickets/show.php') . '?id=' . $ticketId,
                 $userId
             );
         }
@@ -167,7 +167,7 @@ try {
                 $ticketId,
                 'Staff Reply: ' . $ticket['ticket_number'],
                 $commenterName . ' replied: "' . $commentSnippet . '"',
-                '/helpdesk-system/public/tickets/show.php?id=' . $ticketId
+                appUrl('tickets/show.php') . '?id=' . $ticketId
             );
         }
         // Also if an admin replied and agent is assigned, notify agent
@@ -178,13 +178,13 @@ try {
                 $ticketId,
                 'Staff Update: ' . $ticket['ticket_number'],
                 $commenterName . ' commented on assigned ticket: "' . $commentSnippet . '"',
-                '/helpdesk-system/public/tickets/show.php?id=' . $ticketId
+                appUrl('tickets/show.php') . '?id=' . $ticketId
             );
         }
     }
 
     setFlash('success', 'Your reply was added successfully.');
-    header('Location: ../../public/tickets/show.php?id=' . $ticketId);
+    header('Location: ' . appUrl('tickets/show.php') . '?id=' . $ticketId);
     exit;
 
 } catch (Throwable $e) {
@@ -193,6 +193,6 @@ try {
     }
     error_log('Comment creation failed: ' . $e->getMessage());
     setFlash('error', 'Could not save your comment. Please try again.');
-    header('Location: ../../public/tickets/show.php?id=' . $ticketId);
+    header('Location: ' . appUrl('tickets/show.php') . '?id=' . $ticketId);
     exit;
 }

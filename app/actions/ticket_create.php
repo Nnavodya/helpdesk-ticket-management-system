@@ -17,12 +17,12 @@ function redirectWithError(string $message): void
     $_SESSION['old_description'] = $_POST['description'] ?? '';
     $_SESSION['old_priority'] = $_POST['priority'] ?? 'medium';
     $_SESSION['old_category_id'] = $_POST['category_id'] ?? '';
-    header('Location: ../../public/tickets/create.php');
+    header('Location: ' . appUrl('tickets/create.php'));
     exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ../../public/tickets/create.php');
+    header('Location: ' . appUrl('tickets/create.php'));
     exit;
 }
 
@@ -143,12 +143,12 @@ try {
         $ticketId,
         'New Ticket: ' . $ticketNumber,
         ($_SESSION['user_name'] ?? 'An employee') . ' created ticket "' . $subject . '"',
-        '/helpdesk-system/public/tickets/show.php?id=' . $ticketId,
+        appUrl('tickets/show.php') . '?id=' . $ticketId,
         (int) $_SESSION['user_id']
     );
 
     setFlash('success', 'Ticket ' . $ticketNumber . ' was submitted successfully.');
-    header('Location: ../../public/tickets/show.php?id=' . $ticketId);
+    header('Location: ' . appUrl('tickets/show.php') . '?id=' . $ticketId);
     exit;
 
 } catch (Throwable $e) {

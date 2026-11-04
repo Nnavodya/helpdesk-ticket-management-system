@@ -10,7 +10,7 @@ function requireLogin(): void
     if (!isset($_SESSION['user_id'])) {
         $_SESSION['error'] = 'Please log in to continue.';
 
-        header('Location: /helpdesk-system/public/login.php');
+        header('Location: ' . appUrl('login.php'));
         exit;
     }
 }
