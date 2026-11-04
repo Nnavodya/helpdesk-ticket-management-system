@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/session.php';
 
 require_once __DIR__ . '/../config/database.php';
 
@@ -47,7 +47,14 @@ try {
     $_SESSION['user_email'] = $user['email'];
     $_SESSION['user_role'] = $user['role'];
 
-    header('Location: ../../public/dashboard.php');
+    $pendingTicketLookup = $_SESSION['pending_ticket_lookup'] ?? '';
+    unset($_SESSION['pending_ticket_lookup']);
+
+    if (is_string($pendingTicketLookup) && $pendingTicketLookup !== '') {
+        header('Location: ../../public/index.php?ticket_number=' . urlencode($pendingTicketLookup));
+    } else {
+        header('Location: ../../public/dashboard.php');
+    }
     exit;
 
 } catch (PDOException $e) {

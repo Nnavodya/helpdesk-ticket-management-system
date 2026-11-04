@@ -26,6 +26,6 @@ $baseUri = '/helpdesk-system/public';
 </footer>
 
 <!-- Interactive Scripts -->
-<script src="<?= $baseUri ?>/assets/js/app.js?v=4"></script>
+<script src="<?= $baseUri ?>/assets/js/app.js?v=5"></script>
 </body>
 </html>

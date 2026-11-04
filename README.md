@@ -18,7 +18,7 @@ In organizational IT environments, employees frequently encounter technical prob
 ## 🚀 Key Features
 
 ### 1. 🌐 Public Support Portal & Quick Status Tracker
-- **No-login Ticket Tracker:** Employees and stakeholders can check the status, category, priority, and submission date of any ticket using just the reference number (e.g. `HD-20261102-AB12CD`).
+- Ticket status lookup requires sign-in; employees see only their own tickets, agents see tickets assigned to them or created by them, and administrators can view all tickets.
 - Quick links to staff login and employee account registration.
 
 ### 2. 🔐 Authentication & Role-Based Access Control (RBAC)
@@ -148,13 +148,17 @@ C:\xampp\htdocs\helpdesk-system
 4. Select the file: `c:\xampp\htdocs\helpdesk-system\database\schema.sql` and click **Import**.
 
 ### Step 4: Configure Database Settings
-If you have a customized MySQL password, update `app/config/database.php`:
-```php
-$host = '127.0.0.1';
-$dbname = 'helpdesk_db';
-$username = 'root';
-$password = ''; // Your XAMPP MySQL password (default is empty)
+For local XAMPP development, the application defaults to `127.0.0.1`, database `helpdesk_db`, and user `root` with an empty password. For deployment, configure these environment variables and set `APP_ENV=production`:
+```text
+APP_ENV=production
+DB_HOST=your-database-host
+DB_NAME=helpdesk_db
+DB_USER=helpdesk_app
+DB_PASSWORD=use-a-unique-secret
 ```
+Production mode refuses to start without these database settings. Use a dedicated database account with only the permissions the application needs; do not use MySQL `root`.
+
+The application marks session cookies `Secure` automatically in production and when HTTPS is detected. Production must be served over HTTPS. If TLS terminates at a trusted reverse proxy, set `SESSION_COOKIE_SECURE=1` in the application environment.
 
 ### Step 5: Launch the Application
 Open your browser and visit:
@@ -189,7 +193,8 @@ http://localhost/helpdesk-system/public/
 - **SQL Injection Prevention:** 100% prepared statements across all database queries.
 - **Cross-Site Scripting (XSS):** All dynamic outputs sanitized via `htmlspecialchars($val, ENT_QUOTES, 'UTF-8')`.
 - **Cross-Site Request Forgery (CSRF):** Cryptographically secure tokens validated on all mutating requests.
-- **Session Security:** Session IDs regenerated on login (`session_regenerate_id(true)`) and strict role guards on all admin endpoints.
+- **Session Security:** Session IDs regenerated on login, cookies use `HttpOnly`, `SameSite=Lax`, and HTTPS-only `Secure` in production.
+- **Ticket privacy:** Public ticket lookups require sign-in and enforce role-based ticket visibility.
 - **Admin Self-Demotion Lock:** The last active administrator cannot be deactivated or demoted to prevent system lockout.
 
 ---

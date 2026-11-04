@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/../app/includes/session.php';
 
 // Only accept logout requests submitted through POST.
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -32,10 +32,13 @@ if (ini_get('session.use_cookies')) {
         session_name(),
         '',
         time() - 42000,
-        $params['path'],
-        $params['domain'],
-        $params['secure'],
-        $params['httponly']
+        [
+            'path' => $params['path'],
+            'domain' => $params['domain'],
+            'secure' => $params['secure'],
+            'httponly' => $params['httponly'],
+            'samesite' => $params['samesite'] ?? 'Lax',
+        ]
     );
 }
 

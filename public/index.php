@@ -4,11 +4,16 @@
  * IT Help Desk & Ticket Management System
  */
 
-session_start();
+require_once __DIR__ . '/../app/includes/session.php';
 
-// If user is already logged in, redirect directly to dashboard
-if (isset($_SESSION['user_id'])) {
-    header('Location: /helpdesk-system/public/dashboard.php');
+// Ticket status is only available to authenticated users.
+$lookupNumber = is_string($_GET['ticket_number'] ?? null)
+    ? trim($_GET['ticket_number'])
+    : '';
+if ($lookupNumber !== '' && !isset($_SESSION['user_id'])) {
+    $_SESSION['pending_ticket_lookup'] = $lookupNumber;
+    $_SESSION['error'] = 'Please sign in to view ticket status.';
+    header('Location: login.php');
     exit;
 }
 
@@ -19,13 +24,12 @@ $pageTitle = 'Enterprise IT Support Portal';
 $activeNav = 'home';
 
 // Handle quick ticket tracking lookup
-$lookupNumber = trim($_GET['ticket_number'] ?? '');
 $lookupResult = null;
 $lookupError = '';
 
 if ($lookupNumber !== '') {
     try {
-        $stmt = $pdo->prepare('
+        $sql = '
             SELECT 
                 t.ticket_number,
                 t.subject,
@@ -38,13 +42,31 @@ if ($lookupNumber !== '') {
             FROM tickets t
             INNER JOIN categories c ON c.id = t.category_id
             WHERE t.ticket_number = :ticket_number
-            LIMIT 1
-        ');
-        $stmt->execute(['ticket_number' => $lookupNumber]);
-        $lookupResult = $stmt->fetch(PDO::FETCH_ASSOC);
+        ';
+        $params = [':ticket_number' => $lookupNumber];
+        $userId = (int) $_SESSION['user_id'];
+        $userRole = $_SESSION['user_role'] ?? '';
 
-        if (!$lookupResult) {
-            $lookupError = 'No ticket found with reference "' . e($lookupNumber) . '". Please check your ticket number.';
+        if ($userRole === 'employee') {
+            $sql .= ' AND t.created_by = :requester_user_id';
+            $params[':requester_user_id'] = $userId;
+        } elseif ($userRole === 'agent') {
+            $sql .= ' AND (t.assigned_to = :assigned_user_id OR t.created_by = :requester_user_id)';
+            $params[':assigned_user_id'] = $userId;
+            $params[':requester_user_id'] = $userId;
+        } elseif ($userRole !== 'admin') {
+            $lookupError = 'No ticket found, or you do not have permission to view it.';
+        }
+
+        if ($lookupError === '') {
+            $sql .= ' LIMIT 1';
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $lookupResult = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$lookupResult) {
+                $lookupError = 'No ticket found, or you do not have permission to view it.';
+            }
         }
     } catch (PDOException $e) {
         error_log('Ticket lookup error: ' . $e->getMessage());

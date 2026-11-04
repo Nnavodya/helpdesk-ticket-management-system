@@ -4,7 +4,7 @@
  * Help Desk & Ticket Management System
  */
 
-session_start();
+require_once __DIR__ . '/../app/includes/session.php';
 
 if (isset($_SESSION['user_id'])) {
     header('Location: /helpdesk-system/public/dashboard.php');
@@ -107,6 +107,6 @@ unset($_SESSION['dev_reset_link'], $_SESSION['dev_reset_email']);
         </div>
     </div>
 
-    <script src="/helpdesk-system/public/assets/js/app.js?v=4"></script>
+    <script src="/helpdesk-system/public/assets/js/app.js?v=5"></script>
 </body>
 </html>

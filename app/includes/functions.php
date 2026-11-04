@@ -4,9 +4,7 @@
  * Shared Utility Functions
  */
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/session.php';
 
 /**
  * Escapes HTML output safely.
@@ -378,4 +376,3 @@ function getRecentNotifications(PDO $pdo, int $userId, int $limit = 6): array
         return [];
     }
 }
-
