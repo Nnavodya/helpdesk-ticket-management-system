@@ -5,6 +5,42 @@
  * Set APP_BASE_PATH to the URL path that serves the public directory,
  * such as /helpdesk-system/public or / when public is the document root.
  */
+function appDeploymentConfig(): array
+{
+    static $config = null;
+
+    if ($config !== null) {
+        return $config;
+    }
+
+    $configPath = __DIR__ . '/../config/deployment.php';
+    if (!is_file($configPath)) {
+        $config = [];
+        return $config;
+    }
+
+    $loadedConfig = require $configPath;
+    if (!is_array($loadedConfig)) {
+        throw new RuntimeException('Deployment config must return an array.');
+    }
+
+    $config = $loadedConfig;
+    return $config;
+}
+
+function appSetting(string $name): ?string
+{
+    $environmentValue = getenv($name);
+    if (is_string($environmentValue) && $environmentValue !== '') {
+        return $environmentValue;
+    }
+
+    $config = appDeploymentConfig();
+    $configValue = $config[$name] ?? null;
+
+    return is_string($configValue) ? $configValue : null;
+}
+
 function appBasePath(): string
 {
     static $basePath = null;
@@ -13,8 +49,8 @@ function appBasePath(): string
         return $basePath;
     }
 
-    $configuredPath = getenv('APP_BASE_PATH');
-    $path = $configuredPath === false || trim($configuredPath) === ''
+    $configuredPath = appSetting('APP_BASE_PATH');
+    $path = $configuredPath === null || trim($configuredPath) === ''
         ? '/helpdesk-system/public'
         : trim($configuredPath);
 

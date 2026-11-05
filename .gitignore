@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+/app/config/deployment.php
 
 # Logs
 *.log

@@ -1,10 +1,4 @@
 
-CREATE DATABASE IF NOT EXISTS helpdesk_db
-    CHARACTER SET utf8mb4
-    COLLATE utf8mb4_unicode_ci;
-
-USE helpdesk_db;
-
 -- 1. Users table
 CREATE TABLE IF NOT EXISTS users (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -186,6 +180,5 @@ INSERT IGNORE INTO categories (name, description) VALUES
 ('Network', 'Internet and network issues'),
 ('Account Access', 'Login and access issues'),
 ('Other', 'Other technical problems');
-
 
 

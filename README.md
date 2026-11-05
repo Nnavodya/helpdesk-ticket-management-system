@@ -144,7 +144,7 @@ C:\xampp\htdocs\helpdesk-system
 ### Step 3: Import Database Schema
 1. Open your browser and navigate to: `http://localhost/phpmyadmin/`
 2. Create a new database named: `helpdesk_db` (Collation: `utf8mb4_unicode_ci`).
-3. Click on the `helpdesk_db` database, go to the **Import** tab.
+3. Select the `helpdesk_db` database, then go to the **Import** tab.
 4. Select the file: `c:\xampp\htdocs\helpdesk-system\database\schema.sql` and click **Import**.
 
 ### Step 4: Configure Database Settings
@@ -157,6 +157,8 @@ DB_NAME=helpdesk_db
 DB_USER=helpdesk_app
 DB_PASSWORD=use-a-unique-secret
 ```
+If your shared host does not provide environment-variable settings, copy `app/config/deployment.example.php` to `app/config/deployment.php` and replace its values with the hosting panel's database details. The real `deployment.php` is ignored by Git; do not commit or share it. For the InfinityFree-style layout where the project is uploaded to `htdocs/helpdesk-system`, set `APP_BASE_PATH` to `/helpdesk-system/public`. Import `database/schema.sql` while the hosting database is selected in phpMyAdmin.
+
 Production mode refuses to start without these database settings. Use a dedicated database account with only the permissions the application needs; do not use MySQL `root`.
 
 The application marks session cookies `Secure` automatically in production and when HTTPS is detected. Production must be served over HTTPS. If TLS terminates at a trusted reverse proxy, set `SESSION_COOKIE_SECURE=1` in the application environment.
@@ -170,6 +172,7 @@ http://localhost/helpdesk-system/public/
 ### Production Web Server and Uploads
 
 - Configure the web server's document root to the `public/` directory, not the repository root. Set `APP_BASE_PATH` to the URL path serving `public/` (for example, `/helpdesk-system/public` for the local XAMPP layout, or `/` when `public/` is the domain document root).
+- If the host only serves files from `htdocs`, upload the complete project into a subfolder such as `htdocs/helpdesk-system` and use the matching `/helpdesk-system/public` URL path. Keep the included Apache access rules enabled.
 - The public action entry points under `public/actions/` include their implementation from `app/`. Keep `app/`, `database/`, `tests/`, and `storage/` outside the document root where possible.
 - Apache deployments should honor the included `.htaccess` access restrictions. Nginx and other servers must be configured with equivalent rules; `.htaccess` is Apache-specific.
 - New attachments are stored in `storage/ticket-uploads/` and are delivered through an authenticated endpoint. Existing files in `public/uploads/tickets/` should remain blocked from direct web access; the application can still serve them to users authorized to view the ticket.

@@ -1,12 +1,13 @@
 
 <?php
 
-$appEnvironment = strtolower(trim(getenv('APP_ENV') ?: 'development'));
-$host = getenv('DB_HOST') ?: ($appEnvironment === 'production' ? '' : '127.0.0.1');
-$dbname = getenv('DB_NAME') ?: ($appEnvironment === 'production' ? '' : 'helpdesk_db');
-$username = getenv('DB_USER') ?: ($appEnvironment === 'production' ? '' : 'root');
-$password = getenv('DB_PASSWORD');
-$password = is_string($password) ? $password : '';
+require_once __DIR__ . '/../includes/paths.php';
+
+$appEnvironment = strtolower(trim(appSetting('APP_ENV') ?? 'development'));
+$host = appSetting('DB_HOST') ?? ($appEnvironment === 'production' ? '' : '127.0.0.1');
+$dbname = appSetting('DB_NAME') ?? ($appEnvironment === 'production' ? '' : 'helpdesk_db');
+$username = appSetting('DB_USER') ?? ($appEnvironment === 'production' ? '' : 'root');
+$password = appSetting('DB_PASSWORD') ?? '';
 
 if (
     $host === ''
